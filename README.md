@@ -176,6 +176,61 @@ python3 -c "from src.monitoring.dashboard import watch_dashboard; watch_dashboar
   [x] quinone_C_007        dft      failed       0%
 ```
 
+## Vector Memory System (Rust)
+
+BatteryFold includes a high-performance vector memory system written in Rust, inspired by Ruflo's AgentDB + SONA architecture. It provides sub-millisecond nearest neighbor search for molecular design knowledge.
+
+### Features
+
+- **HNSW index**: Hierarchical Navigable Small World graph for 150-12500x faster retrieval than brute-force
+- **Persistent storage**: Cross-session JSON-backed memory survives restarts
+- **SONA engine**: Self-Optimizing Neural Adaptation captures successful execution patterns and auto-routes similar tasks
+- **6 memory types**: molecule, calculation_path, screening_result, workflow_trace, context, pattern
+
+### Usage
+
+```bash
+# Build the Rust library
+batteryfold memory build
+
+# Initialize memory store
+batteryfold memory init --path ./memory_data
+
+# Store a molecule with properties
+batteryfold memory store --name quinone_A \
+  --smiles "O=c1ccccc1O" \
+  --properties '{"voltage":3.7,"energy_density":310,"homo":-4.5,"lumo":-1.8}' \
+  --tags "quinone,high_voltage"
+
+# Find similar molecules by target properties
+batteryfold memory recall \
+  --properties '{"voltage":3.5,"energy_density":300,"homo":-4.3}' \
+  -k 5
+
+# View statistics
+batteryfold memory stats
+```
+
+### Python API
+
+```python
+from src.memory_native import RustMemorySystem
+
+mem = RustMemorySystem('./memory_data')
+
+# Store molecules from screening results
+mem.store_molecule('quinone_A', {
+    'voltage': 3.7, 'energy_density': 310,
+    'homo': -4.5, 'lumo': -1.8, 'gap': 2.7,
+    'lambda': 0.21, 'thermal_stability': 220,
+}, smiles='O=c1ccccc1O')
+
+# Find similar molecules
+results = mem.find_similar_molecules({'voltage': 3.5, 'energy_density': 300}, k=5)
+for r in results:
+    print(f"{r.key}: distance={r.distance:.4f}, data={r.data}")
+```
+
 ## The methodology
 
 We don't guess molecules and test them. We work backwards from the physics.

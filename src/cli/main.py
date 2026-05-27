@@ -145,6 +145,79 @@ def cmd_monitor(args):
     print_dashboard(args.workdir or '.')
 
 
+def cmd_memory(args):
+    """Rust-backed vector memory system (HNSW + SONA)."""
+    try:
+        from ..memory_native import RustMemorySystem
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        print("Build the Rust library first: cd src-rs && cargo build --release")
+        sys.exit(1)
+
+    if args.memory_cmd == 'init':
+        mem = RustMemorySystem(args.path or './memory_data')
+        stats = mem.stats()
+        print(f"Memory store initialized at {args.path or './memory_data'}")
+        print(f"  Existing entries: {stats.get('total_entries', 0)}")
+
+    elif args.memory_cmd == 'store':
+        mem = RustMemorySystem(args.path or './memory_data')
+        if args.properties:
+            props = json.loads(args.properties)
+            entry_id = mem.store_molecule(
+                args.name or 'unnamed',
+                props,
+                smiles=args.smiles or '',
+                tags=args.tags.split(',') if args.tags else None,
+            )
+            print(f"Stored molecule '{args.name}' as entry #{entry_id}")
+        else:
+            print("Error: provide --properties JSON")
+
+    elif args.memory_cmd == 'recall':
+        mem = RustMemorySystem(args.path or './memory_data')
+        if args.properties:
+            props = json.loads(args.properties)
+            results = mem.find_similar_molecules(props, k=args.k or 5)
+            if results:
+                print(f"Found {len(results)} similar molecules:")
+                for r in results:
+                    print(f"  {r.key} (dist={r.distance:.4f}, "
+                          f"confidence={r.confidence:.2f})")
+                    if r.data:
+                        for k, v in r.data.items():
+                            if k != 'smiles' and isinstance(v, (int, float)):
+                                print(f"    {k}: {v}")
+            else:
+                print("No similar molecules found in memory.")
+
+    elif args.memory_cmd == 'stats':
+        mem = RustMemorySystem(args.path or './memory_data')
+        stats = mem.stats()
+        print("Memory Store Statistics:")
+        print(f"  Total entries: {stats.get('total_entries', 0)}")
+        print(f"  SONA patterns: {stats.get('sona_patterns', 0)}")
+        for type_name, count in stats.get('by_type', {}).items():
+            print(f"  {type_name}: {count}")
+
+    elif args.memory_cmd == 'build':
+        import subprocess
+        print("Building Rust memory library...")
+        result = subprocess.run(
+            ['cargo', 'build', '--release'],
+            cwd=str(Path(__file__).parent.parent.parent / 'src-rs'),
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            print("Build successful!")
+        else:
+            print(f"Build failed:\n{result.stderr}")
+            sys.exit(1)
+
+    else:
+        print("Usage: batteryfold memory <init|store|recall|stats|build>")
+
+
 def cmd_version(args):
     """Show version info."""
     print("BatteryFold v1.0.0")
@@ -196,6 +269,18 @@ def main():
     p_monitor = subparsers.add_parser('monitor', help='Pipeline monitoring')
     p_monitor.add_argument('--workdir', default='.')
 
+    # memory (Rust-backed)
+    p_memory = subparsers.add_parser('memory', help='Rust vector memory (HNSW+SONA)')
+    p_memory.add_argument('memory_cmd', nargs='?', default='stats',
+                          choices=['init', 'store', 'recall', 'stats', 'build'],
+                          help='Memory command')
+    p_memory.add_argument('--path', help='Memory store directory')
+    p_memory.add_argument('--name', help='Molecule name (for store)')
+    p_memory.add_argument('--smiles', help='SMILES string (for store)')
+    p_memory.add_argument('--properties', help='JSON properties dict')
+    p_memory.add_argument('--tags', help='Comma-separated tags')
+    p_memory.add_argument('-k', type=int, default=5, help='Number of results')
+
     # version
     subparsers.add_parser('version', help='Show version')
 
@@ -208,6 +293,7 @@ def main():
         'analyze': cmd_analyze,
         'adapt': cmd_adapt,
         'monitor': cmd_monitor,
+        'memory': cmd_memory,
         'version': cmd_version,
     }
 
