@@ -1,0 +1,75 @@
+# Planetary and orbital environment parameters
+
+venus_altitude_50km:
+  description: "Venus at 50-55km altitude — aerostat habitat zone"
+  temperature_C: [0, 50]
+  pressure_atm: 0.9
+  gravity_g: 0.904
+  atmosphere:
+    composition: "96.5% CO2, 3.5% N2"
+    available_elements: ["C", "O", "N", "H", "S"]
+    absent_elements: ["Li", "Co", "Ni", "Mn", "Fe"]
+  solar_irradiance: "2600 W/m2"
+  radiation: "moderate (atmospheric shielding)"
+  constraints:
+    - "Only organic batteries from CO2 possible"
+    - "Sulfuric acid clouds — corrosion resistance needed"
+    - "Thermal cycling from day/night"
+
+mars_surface:
+  description: "Mars surface conditions"
+  temperature_C: [-140, 20]
+  pressure_atm: 0.006
+  gravity_g: 0.381
+  atmosphere:
+    composition: "95% CO2, 2.7% N2"
+    available_elements: ["C", "O", "N", "H", "Fe", "Si", "Mg", "Al"]
+    soil_minerals: ["perchlorates", "iron oxide", "basalt"]
+  solar_irradiance: "590 W/m2"
+  radiation: "high (thin atmosphere)"
+  constraints:
+    - "Low temperature battery performance critical"
+    - "ISRU from perchlorates and regolith"
+    - "Dust contamination resistance"
+
+lunar_surface:
+  description: "Lunar surface conditions"
+  temperature_C: [-230, 120]
+  pressure_atm: 0
+  gravity_g: 0.166
+  atmosphere:
+    composition: "vacuum"
+    available_elements: ["O", "Si", "Al", "Fe", "Ca", "Mg", "Ti"]
+  solar_irradiance: "1361 W/m2 (when lit)"
+  radiation: "extreme (no atmosphere)"
+  constraints:
+    - "Vacuum-compatible chemistry only"
+    - "Extreme thermal cycling"
+    - "Radiation degradation of organic materials"
+
+orbital:
+  description: "Low Earth Orbit conditions (Starlink-class)"
+  temperature_C: [-170, 120]
+  pressure_atm: 0
+  gravity_g: 0  # microgravity
+  atmosphere:
+    composition: "vacuum"
+  solar_irradiance: "1361 W/m2"
+  radiation: "moderate (Earth magnetosphere)"
+  lifetime_years: 15
+  constraints:
+    - "15+ year thermal cycling life"
+    - "Radiation resistance"
+    - "No maintenance possible"
+
+earth:
+  description: "Standard Earth conditions"
+  temperature_C: [-40, 60]
+  pressure_atm: 1.0
+  gravity_g: 1.0
+  atmosphere:
+    composition: "78% N2, 21% O2"
+    available_elements: "full periodic table"
+  constraints:
+    - "Standard conditions"
+    - "All materials available"

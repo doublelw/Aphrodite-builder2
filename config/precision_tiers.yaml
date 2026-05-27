@@ -1,0 +1,33 @@
+# Calculation precision tiers for Aphrodite-builder
+
+quick:
+  method: GFN-xTB
+  basis: none
+  estimated_time_per_molecule: "10s"
+  cpu_hours_per_molecule: 0.01
+  use_for: "initial geometry screening"
+
+screening:
+  method: r2SCAN-3c
+  basis: def2-mTZVPP
+  estimated_time_per_molecule: "30min"
+  cpu_hours_per_molecule: 4
+  scf_convergence: 1.0e-7
+  use_for: "property evaluation, geometry optimization"
+
+validation:
+  method: DLPNO-CCSD(T)
+  basis: def2-TZVP
+  auxiliary_basis: def2/J def2/JK def2/C
+  estimated_time_per_molecule: "8h"
+  cpu_hours_per_molecule: 64
+  scf_convergence: 1.0e-8
+  use_for: "gold-standard energy validation"
+
+excited_state:
+  method: r2SCAN-3c
+  basis: def2-mTZVPP
+  n_states: 10
+  estimated_time_per_molecule: "20min"
+  cpu_hours_per_molecule: 3
+  use_for: "thermal stability, optical properties"

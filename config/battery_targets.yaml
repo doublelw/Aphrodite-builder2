@@ -1,0 +1,56 @@
+# Battery performance target definitions
+
+metrics:
+  voltage:
+    unit: "V"
+    range: [0.5, 5.0]
+    target_for_cathode: ">3.5"
+    derivation: "HOMO/LUMO levels → electrochemical window"
+
+  energy_density:
+    unit: "Wh/kg"
+    range: [50, 800]
+    target: ">300"
+    derivation: "molecular_weight + redox_potential"
+
+  power_density:
+    unit: "W/kg"
+    range: [10, 10000]
+    target: ">500"
+    derivation: "charge_transfer_rate (Marcus theory)"
+
+  cycle_life:
+    unit: "cycles"
+    range: [100, 100000]
+    target: ">1000"
+    derivation: "reorganization_energy + structural stability"
+
+  thermal_stability:
+    unit: "C"
+    range: [50, 500]
+    target: ">200"
+    derivation: "TD-DFT decomposition analysis"
+
+  flame_resistance:
+    unit: "score"
+    range: [0, 1]
+    target: ">0.7"
+    derivation: "combustion enthalpy + bond dissociation energies"
+
+  operating_temperature:
+    unit: "C"
+    range: [-70, 500]
+    target: "-40 to 60"
+    derivation: "solvation behavior + thermal analysis"
+
+  self_discharge:
+    unit: "%/month"
+    range: [0, 50]
+    target: "<5"
+    derivation: "HOMO stability + side reaction prediction"
+
+  environmental_adaptability:
+    unit: "score"
+    range: [0, 1]
+    target: "planet-specific"
+    derivation: "multi-environment solvation modeling"
