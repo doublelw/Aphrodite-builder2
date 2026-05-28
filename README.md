@@ -1,26 +1,32 @@
 # Aphrodite-builder
 
-**First-principles molecular design platform for organic battery materials.**
+**Full-chain organic battery design platform — from molecule to product.**
 
-Specify performance targets (voltage, energy density, thermal stability, cycle life, flame resistance...), get molecular candidates ranked by multi-objective fitness.
+Design organic battery molecules from first principles, predict performance with quantum chemistry, plan synthesis routes, engineer cells, and estimate manufacturing costs. All the way from atomic orbitals to product economics.
 
 > Aphrodite: Greek name for Venus. This project was born from a question: how do you store energy on a planet where the atmosphere is 96.5% CO2 and there's no lithium, cobalt, or nickel? The answer: design organic battery molecules from first principles, using the planet's own resources.
 
 ---
 
-## What it does
-
-Aphrodite-builder is a computational framework that:
-
-1. **Defines battery performance targets** — voltage, energy density, power density, cycle life, flame resistance, temperature range
-2. **Generates molecular candidates** — builds organic molecules from structural constraints derived from those targets
-3. **Screens with quantum chemistry** — runs DFT, DLPNO-CCSD(T), and TD-DFT calculations to predict actual performance
-4. **Ranks by multi-objective fitness** — balances competing requirements (e.g., high voltage vs. long cycle life)
-5. **Adapts to any environment** — Earth, Venus, Mars, lunar surface, orbital. Each environment changes the chemistry constraints.
+## Full design chain
 
 ```
-Performance Targets → Structural Constraints → Molecular Candidates → Quantum Chemistry → Ranked Results
+Molecule Design → Quantum Validation → Synthesis Planning → Cell Engineering → BMS Design → Manufacturing → Product
+     ↓                  ↓                    ↓                    ↓               ↓              ↓
+  BatteryFold        PySCF/ORCA         Cost + Yield        Electrode         SOC/SOH        Lab→Pilot→Prod
+  Neural Net         DFT/DLPNO           Scalability         Electrolyte       Balancing      Cost Analysis
 ```
+
+**What BatteryFold does (molecule to product):**
+
+1. **Molecular design** — Generate candidates from performance targets, predict properties with BatteryFold neural network
+2. **Quantum validation** — Multi-precision DFT pipeline (xTB → r2SCAN-3c → DLPNO-CCSD(T)) with PySCF/ORCA/ASE backends
+3. **Synthesis planning** — Route selection, reagent costs, yield estimates, scalability scoring, experimental protocols
+4. **Cell engineering** — Electrode formulation, electrolyte selection, cell architecture (coin/pouch/18650)
+5. **BMS algorithms** — SOC estimation (EKF), SOH tracking, cell balancing, thermal management
+6. **Experimental methods** — CV, GCD, EIS, rate capability, cycle life, XRD, SEM, FTIR, TGA protocols
+7. **Manufacturing** — Lab → pilot → industrial process design, cost analysis at each scale
+8. **Planetary adaptation** — Design batteries for Venus (CO2-derived), Mars (ISRU), orbital, lunar
 
 ## Architecture
 
@@ -29,15 +35,24 @@ Aphrodite-builder/
 ├── src/
 │   ├── core/                    # Property prediction, constraint design, screening engine
 │   ├── quantum/                 # ORCA input generation, result extraction, precision management
+│   ├── backends/                # Multi-engine: PySCF, ORCA, ASE, cclib parser
 │   ├── molecular/               # Geometry builder, dimer constructor, conformer generation
-│   ├── ai_orchestrator/         # Autonomous pipeline controller, cluster management, self-healing
-│   ├── ai_interface/            # Claude / GLM / DeepSeek API integration
-│   ├── models/                  # BatteryFold neural network (AlphaFold2-inspired)
+│   ├── models/                  # BatteryFold neural network (AlphaFold3-inspired)
 │   ├── workflows/               # Complete analysis pipelines
-│   │   ├── screening_pipeline.py    # SMILES → geometry → ORCA → ranking
+│   │   ├── screening_pipeline.py    # SMILES → geometry → quantum → ranking
 │   │   ├── precision_ladder.py      # xTB → DFT → DLPNO escalation
 │   │   ├── planetary_adapter.py     # Venus/Mars/Lunar/Orbital evaluation
 │   │   └── battery_analysis.py      # Redox/lambda/thermal/flame analysis
+│   ├── synthesis/               # Synthesis route planning, cost estimation
+│   ├── cell_design/             # Electrode formulation, electrolyte, cell architecture
+│   ├── bms/                     # SOC/SOH estimation, cell balancing, thermal management
+│   ├── experimental/            # CV/GCD/EIS/rate/cycle protocols, characterization methods
+│   ├── integration/             # Manufacturing process (lab/pilot/industrial), cost analysis
+│   ├── ai_orchestrator/         # Autonomous pipeline controller, cluster management, self-healing
+│   ├── ai_interface/            # Claude / GLM / DeepSeek API integration
+│   ├── cli/                     # BatteryFold CLI (batteryfold command)
+│   ├── monitoring/              # Pipeline monitoring dashboard
+│   └── memory_native.py         # Rust memory system Python bindings
 │   ├── cli/                     # Command-line interface (batteryfold command)
 │   ├── monitoring/              # Pipeline status dashboard
 │   └── analysis/                # Battery metrics, energy profiles, validation reports
@@ -74,6 +89,105 @@ properties, confidence = model(atomic_numbers, bond_types, distances, coordinate
 ```
 
 ## Workflows
+
+### Multi-Backend Quantum Chemistry
+
+```python
+from src.backends.engine import QuantumEngine, MoleculeSpec, CalcType, CalcConfig
+
+engine = QuantumEngine()  # auto-detects PySCF, ORCA, ASE
+
+mol = MoleculeSpec(
+    atoms=[('C', 0, 0, 0), ('O', 1.14, 0, 0), ('H', -0.54, 0.94, 0), ...],
+    name='methanol',
+)
+
+# DFT single point — uses PySCF if available, falls back to ORCA
+result = engine.calculate(mol, CalcType.SINGLE_POINT, CalcConfig(method='B3LYP'))
+print(f"HOMO: {result.homo_eV:.2f} eV, Gap: {result.gap_eV:.2f} eV")
+
+# High-accuracy DLPNO-CCSD(T) — automatically uses ORCA
+result = engine.calculate(mol, CalcType.DLPNO_CCSD_T, CalcConfig(method='DLPNO-CCSD(T)'))
+
+# Parse existing output files (ORCA, Gaussian, Psi4, Q-Chem...)
+from src.backends.parser import OutputParser
+parsed = OutputParser().parse('calculation.out')
+```
+
+### Synthesis Planning
+
+```python
+from src.synthesis.planner import SynthesisPlanner
+
+planner = SynthesisPlanner()
+routes = planner.plan("O=c1ccccc1O", scale="lab")
+
+for route in routes:
+    print(f"Cost: ${route.cost_per_gram_usd:.2f}/g | "
+          f"Yield: {route.total_yield:.0%} | "
+          f"Steps: {len(route.steps)} | "
+          f"Difficulty: {'*' * route.difficulty}")
+
+# Generate full experimental protocol
+protocol = planner.generate_protocol(routes[0])
+```
+
+### Cell Engineering
+
+```python
+from src.cell_design.architect import CellArchitect, CellFormat
+
+architect = CellArchitect()
+cell = architect.design_cell(
+    molecule_name="quinone_A",
+    voltage=3.7,
+    capacity_mAh_g=250,
+    format=CellFormat.COIN_2032,
+    electrolyte_type="standard",
+)
+
+print(f"Energy: {cell.energy_density_wh_kg:.0f} Wh/kg | "
+      f"Cycles: {cell.estimated_cycles} | "
+      f"Cost: ${cell.cost_usd_kwh:.2f}/kWh")
+```
+
+### BMS Algorithms
+
+```python
+from src.bms.algorithms import SOCEstimator, SOHTracker, BMSConfig
+
+config = BMSConfig(cell_capacity_mAh=250, max_voltage=4.2)
+soc_est = SOCEstimator(config)
+
+# Extended Kalman Filter SOC estimation
+soc = soc_est.extended_kalman(cell_state, measured_voltage, measured_current, dt=1.0)
+
+# SOH degradation tracking
+soh_tracker = SOHTracker(config)
+remaining = soh_tracker.remaining_cycles(soh=0.95)
+```
+
+### Experimental Protocols
+
+```python
+from src.experimental.methods import ExperimentalDesigner
+
+designer = ExperimentalDesigner()
+methods = designer.design_battery_test_suite("quinone_A", voltage=3.7)
+protocol = designer.generate_protocol_document(methods)
+# Includes: CV, GCD, EIS, rate capability, cycle life,
+#           XRD, SEM, FTIR, TGA, NMR with full parameters
+```
+
+### Manufacturing Cost Analysis
+
+```python
+from src.integration.process import IntegrationEngine, ProductionScale
+
+engine = IntegrationEngine()
+comparison = engine.scale_comparison()
+# Lab: $500/kWh, CAPEX $50K → Pilot: $80/kWh, CAPEX $5M → Industrial: $35/kWh, CAPEX $100M
+```
 
 ### 1. Full Screening Pipeline
 
