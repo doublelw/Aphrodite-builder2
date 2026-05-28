@@ -17,7 +17,10 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from enum import Enum
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 
 class Environment(Enum):
@@ -153,6 +156,8 @@ class PlanetaryAdapter:
             self._load_custom_profiles(config_path)
 
     def _load_custom_profiles(self, path: str):
+        if yaml is None:
+            return
         with open(path) as f:
             custom = yaml.safe_load(f)
         for env_name, data in custom.items():
