@@ -1,0 +1,1 @@
+"""Manufacturing integration process guidance."""
