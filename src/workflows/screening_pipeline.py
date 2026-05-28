@@ -12,10 +12,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Dict
 
-from ..quantum.orca_input_generator import ORCAInputGenerator, ORCAConfig
-from ..quantum.result_extractor import ResultExtractor
 from ..core.property_predictor import BatteryProperties
-from ..core.screening_engine import ScreeningEngine, ScreeningTarget
+from ..core.screening_engine import ScreeningEngine
+
+try:
+    from ..quantum.orca_input_generator import ORCAInputGenerator, ORCAConfig
+    from ..quantum.result_extractor import ResultExtractor
+    HAS_QUANTUM = True
+except ImportError:
+    HAS_QUANTUM = False
 
 
 @dataclass

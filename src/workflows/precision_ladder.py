@@ -12,8 +12,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Optional, Dict, Callable
 
-from ..quantum.precision_manager import PrecisionManager, PipelineStage
 from ..core.property_predictor import BatteryProperties
+
+try:
+    from ..quantum.precision_manager import PrecisionManager, PipelineStage
+    HAS_QUANTUM = True
+except ImportError:
+    HAS_QUANTUM = False
 
 
 @dataclass

@@ -166,9 +166,11 @@ class SynthesisPlanner:
     def _identify_groups(self, smiles: str) -> List[str]:
         """Identify functional groups from SMILES."""
         groups = []
-        if "=O" in smiles and ("c1" in smiles or "C(" in smiles):
+        has_carbonyl = ("=O" in smiles or "O=" in smiles)
+        has_ring = ("c1" in smiles or "C(" in smiles)
+        if has_carbonyl and has_ring:
             groups.append("quinone")
-        if "NH2" in smiles or "N" in smiles:
+        if "NH2" in smiles or (smiles.count("N") > 0 and "C(=O)N" not in smiles):
             groups.append("aniline")
         if "C(=O)NC" in smiles or "C(=O)N" in smiles:
             groups.append("imide")
